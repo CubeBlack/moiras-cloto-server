@@ -60,8 +60,8 @@ class Dado{
 		return "ok";
 	}
 	function search($criterio="",$tRetorno=""){
-		global $db;
-		$sql = "SELECT * FROM `cloto_dados`";
+		global $db, $user;
+		$sql = "SELECT * FROM `cloto_dados` where `user` = {$user->id};";
 		if($criterio != ""){
 			$qTags = Tag::stringToTags($criterio);
 			$sql .=" WHERE tag like ";

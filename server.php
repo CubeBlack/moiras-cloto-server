@@ -34,3 +34,6 @@ _________________________
 //por enquanto sem restrição de usuario
 $vars = array("config","user","dado","db","dbl","help");
 $term = New Terminal($vars);
+
+
+//var_dump($_SERVER);

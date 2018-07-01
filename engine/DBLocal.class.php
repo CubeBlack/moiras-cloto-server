@@ -11,7 +11,7 @@ public $data;
 	
     global $config;
     if(!isset($_SESSION))
-      session_start();
+      session_start("moiras-cloto-dblocal");
 	if(!isset($_SESSION["m-cloto"]))
 		$this->clear();
 	$this->data = $_SESSION["m-cloto"];
