@@ -1,70 +1,77 @@
 <?php
-	Class TerminalComander{
-		public $tipo;
-		public $str;
-		public $nodes;
-		public $params;
+global $user;
+class Terminal{
+	public function __construct($vars,$echo=true){
+		$this->vars = $vars;
+		$this->echo = $echo;
 	}
-	Class Terminal{
-		function __construct($vars,$noLog=array()){
-			$this->vars = $vars;
-			$this->noLog = $noLog;
+	public function chamada($com) {
+		$com = Terminal::parce($com);
+		$com = Terminal::call($com,$this->vars);
+		if($this->echo) {
+			if(is_string($com)) echo $com;
+			else var_dump($com);
+				
 		}
-		function chamada($comStr){
-			$this->com = new TerminalComander();
-			$this->com->str = $comStr;
-			$this->pearce();
-			$this->call();
-		}
-		function setLog(){
-			//por enquanto desativar o log
-			return;
-			$filename = 'engine/terminal.log';
-			if (!$handle = fopen($filename, 'a')) {
-				 echo "Não foi possível abrir o arquivo ($filename)";
-				 exit;
-			}
-			if (fwrite($handle, $this->com->str."\n") === FALSE) {
-				echo "Não foi possível escrever no arquivo ($filename)";
-			}
-			fclose($handle);
-		}
-		function pearce(){
-			$comStr = $this->com->str;
-			$tipoGet = "nodes";
-			$this->com->tipo = "variable";
+		return $com;
+	}
+	static function parce($comStr) {
+			$comArr = [];
+			$params = [];
+			$nods = [];
+			$aCom = 0;
+			$get = "";
+			$tGet = "node";
 			
-			$nodes[0] = "";
-			$nodeN = 0;
 			
-			$params = array();
-			$paramN = 0;
-			
+			//--------
 			for($i = 0; $i < strlen($comStr);$i++){
-				if($tipoGet == "nodes"){
-					if($comStr[$i] == '.'){
-						$nodeN++;
-						$nodes[$nodeN] = "";
+				//----- getnos -- 
+				if($tGet=="node") {
+					//ignorar linha e espacos
+					if($comStr[$i] == " "||$comStr[$i] == "\n"){
 						continue;
 					}
-					if($comStr[$i] == "("){
-						$tipoGet = "param";
-						$params[$paramN] = "";
-						$this->com->tipo = "function";
-					continue;
+					if($comStr[$i]==".") {
+						if($get!="") $nods[] = $get;
+						$get = "";
+						continue;
+					}
+					if($comStr[$i]=="(") {
+						if($get!="") $nods[] = $get;
+						$comArr[$aCom]["nodes"] = $nods;
+						$comArr[$aCom]["tipo"] = "funcion";
+						$tGet = "param";
+						$get = "";
+						continue;					
+					}
+					if($comStr[$i]==";") {
+						if($get!="") $nods[] = $get;
+						$comArr[$aCom]["nodes"] = $nods;
+						$get = "";
+						$nods = [];
+						$params = [];
+						$aCom++;
+						continue;	
+					}
 				}
-					$nodes[$nodeN] .= $comStr[$i];
-					continue;
-				}
-				if($tipoGet == "param"){
-					if($comStr[$i] == ")"){
-						continue;
+				//----- params -- 
+				if($tGet=="param") {
+					if($comStr[$i]==",") {
+						if($get!="") $params[] = $get;
+						//$params[] = $get;
+						$get = "";
+						continue;			
 					}
-					if($comStr[$i] == ","){
-						++$paramN;
-						continue;
+					if($comStr[$i]==")") {
+						if($get!="") $params[] = $get;
+						$comArr[$aCom]["params"] = $params;
+						$tGet = "node";
+						$get = "";
+						continue;	
 					}
-					if(strlen($comStr)>9){
+					///------
+					if(strlen($get)>7){
 						if(
 							$comStr[$i-8] == "s"&
 							$comStr[$i-7] == "t"&
@@ -75,22 +82,16 @@
 							$comStr[$i-2] == "i"&
 							$comStr[$i-1] == "n"&
 							$comStr[$i-0] == "\""){
-							$tipoGet = "paramStr";
-							$params[$paramN] = "";
+							$tGet = "paramStr";
+							$get = "";
 							continue;
 							
 							//echo "+++";
 						}
 					}
-					if(isset($params[$paramN])){
-						$params[$paramN] .= $comStr[$i];
-					}
-					else{
-						array_push($params,$comStr[$i]);
-					}
-					
+					//------
 				}
-				if($tipoGet == "paramStr"){
+				if($tGet=="paramStr") {
 					if(strlen($comStr)>7){
 						if(
 							$comStr[$i-6] == "\""&
@@ -100,131 +101,102 @@
 							$comStr[$i-2] == "E"&
 							$comStr[$i-1] == "n"&
 							$comStr[$i-0] == "d"){
-							$tipoGet = "param";
-							$params[$paramN] = substr($params[$paramN],0,-6);
+							$tGet = "param";
+							$get = substr($get,0,-6);
+							//if($get!="") $params[] = $get;
+							$params[] = $get;
+							$get = "";
 							continue;
 						}
 					}
-					if(isset($params[$paramN])){
-						$params[$paramN] .= $comStr[$i];
-					}
-					else{
-						array_push($params,$comStr[$i]);
-					}
+				}
+				$get .=  $comStr[$i];
+			}
+			//ends
+			if($comStr[strlen($comStr)-1]!=";") {
+				if($tGet=="node") {
+					if($get!="") $nods[] = $get;
+					$comArr[$aCom]["nodes"] = $nods;
+				}
+				if($tGet=="param") {
+					if($get!="") $params[] = $get;
+					$comArr[$aCom]["params"] = $params;
 				}
 			}
-			$this->com->params = $params;
-			$this->com->nodes = $nodes;
-			//var_dump($this);
-			//echo $this->com->params[0];
-		}
-		function call(){
-			$this->setLog($this->com->str);
-			//---------------------
-			foreach($this->vars as $ar){
-				global ${$ar};
-			}
-			//---------------------
-			if(isset(${$this->com->nodes[0]})){
-				$retorno = ${$this->com->nodes[0]};
-			}
-			else{
-				echo "Erro 011 (Terminal.class): Primeiro termo '{$this->com->nodes[0]}', nao reconhecido.";
-				return;
-			}
-			//---------------------------------
-			if(sizeof($this->com->nodes)< 2) goto fim;
-			for($i = 1; $i < sizeof($this->com->nodes) - 1;$i++){
-				if(isset(${$this->com->nodes[$i]})){
-					$retorno = ${$this->com->nodes[$i]};
-				}
-				else{
-					echo "Erro 012 (Terminal.class): Termo '{$this->com->nodes[$i]}' nao reconhecido.";
-					return;
-				}
-			}
-			//----------------------------------------
-			if($this->com->tipo == "function") goto callFunction;
-			$tNode = $this->com->nodes[sizeof($this->com->nodes) - 1];
-			if(isset($retorno->{$tNode})){
-				$retorno = $retorno->{$tNode};
-			}
-			else{
-				echo "Erro 013 (Terminal.class): Ultimo termo '{$tNode}', nao reconhecido.";
-				return;
-			}
-			goto fim;
-			//----------------------------------
-			callFunction:
-			$tNode = $this->com->nodes[sizeof($this->com->nodes) - 1];
-			if(sizeof($this->com->params)==0)
-				$retorno = $retorno->{$tNode}();
-			else if(sizeof($this->com->params)==1)
-				$retorno = $retorno->{$tNode}($this->com->params[0]);
-			else if(sizeof($this->com->params)==2)
-				$retorno = $retorno->{$tNode}($this->com->params[0],$this->com->params[1]);
-			else if(sizeof($this->com->params)==3)
-				$retorno = $retorno->{$tNode}($this->com->params[0],$this->com->params[1],$this->com->params[2]);
-			
-			else{
-				echo "Erro 014(Terminal.class): Quantidade de parametros nao suportada";
-			}
-			
-			
-			/*
-			if(isset($retorno->{$tNode})){
-				$retorno = $retorno->{$tNode};
-			}
-			else{
-				echo "Erro 013 (Terminal.class): Ultimo termo '{$tNode}', nao reconhecido.";
-				return;
-			}
-			*/
-			goto fim;
-			/*
-			foreach($this->com->nodes as $key => $node){
-				if($key == sizeof($this->com->nodes) - 1){
 
-					
+			//--------
+			return $comArr;
+	}
+	static function call($coms,$vars=[]) {
+		//var_dump($coms);
+		//---------- varives globais -----
+		foreach($vars as $var){
+			global ${$var};
+		}
+		//-------------------------
+		$retorno = [];
+		foreach($coms as $keyCom => $com){
+			if(!isset($com["tipo"])) $com["tipo"] = "var";
+			$var = null;
+			//pegar variavel a aprtir dos nos
+			foreach($com["nodes"] as $keyNod => $nod){
+				//se for o ultimo e for do tipo fun;'ao
+				if($com["tipo"] == "funcion"&& $keyNod == sizeof($com["nodes"])-1) {
+					continue;
 				}
-				else{
-					$retorno .= $node . "->";
-					retorno2 = retorno2->{$node};
-					this>testVar(retorno2);
+				//se for o primeiro
+				if($keyNod == 0) {
+					if(!isset(${$nod})) {
+						$retorno[] = "Erro = O no $keyNod do comando $keyCom [$nod] não foi reconhecido";
+						break;			
+					}
+					$var = ${$nod};
+					continue;
 				}
 				
-			}
-
-			if($this->com->tipo == "variable"){
-				$retorno .= $node;
-			}
-			else if($this->com->tipo == "function"){
-				$retorno .= $node . "(";
-				foreach($this->com->params as $key => $param){
-					if($key == sizeof($this->com->params) - 1){
-						$retorno .= $param;
-					}else{
-						$retorno .= $param . ",";
-					}
-					
+				if(!isset($var->{$nod})) {
+					$retorno[] = "Erro = O no $keyNod do comando $keyCom [$nod] não foi reconhecido";
+					break;			
 				}
-				$retorno .= $node . ")";
-			} 
-			else{
-				echo "Erro(1): Tipo indefinido";
-				return;
+				$var = $var->{$nod};
 			}
-			*/
-			//var_dump(${"user"});
-			fim:
-			//var_dump($this);
-			if(is_string($retorno)){
-				echo $retorno;
+			
+			//executar funcao
+			
+			// ----functions
+			$uNod =  $com["nodes"][sizeof($com["nodes"])-1];
+			if($com["tipo"] == "funcion") {
+				switch(sizeof($com["params"])) {
+					case 0: $retorno[] = $var->{$uNod}();
+						break;
+					case 1: $retorno[] = $var->{$uNod}($com["params"][0]);
+						break;
+					case 2: $retorno[] = $var->{$uNod}($com["params"][0],$com["params"][1]);
+						break;
+					case 3: $retorno[] = $var->{$uNod}($com["params"][0],$com["params"][1],$com["params"][2]);
+						break;
+					case 4: $retorno[] = $var->{$uNod}($com["params"][0],$com["params"][1],$com["params"][2],$com["params"][3]);
+						break;
+					case 5: $retorno[] = $var->{$uNod}($com["params"][0],$com["params"][1],$com["params"][2],$com["params"][3],$com["params"][4]);
+						break;
+					case 6: $retorno[] = $var->{$uNod}($com["params"][0],$com["params"][1],$com["params"][2],$com["params"][3],$com["params"][4],$com["params"][5]);
+						break;
+					case 7: $retorno[] = $var->{$uNod}($com["params"][0],$com["params"][1],$com["params"][2],$com["params"][3],$com["params"][4],$com["params"][5],$com["params"][6]);
+						break;
+					case 8: $retorno[] = $var->{$uNod}($com["params"][0],$com["params"][1],$com["params"][2],$com["params"][3],$com["params"][4],$com["params"][5],$com["params"][6],$com["params"][7]);
+						break;
+					default: $retorno[] = "Erro = Numero de parametros nao suportado pelo terminal";
+						break;
+				}
 			}
-			else{
-				var_dump($retorno);
+			elseif($com["tipo"] == "var") {
+				$retorno[] = $var;
 			}
 			
 		}
-		
+		if(sizeof($retorno)==0) $retorno = "Empty!";
+		if(sizeof($retorno)==1) $retorno = $retorno[0];
+		//$retorno["type"] = "RetornoList";
+		return $retorno;
 	}
+}

@@ -3,6 +3,7 @@ class Tag{
 
 	public static function stringToTags($str){
 		//echo $str;
+        $str = Tag::strToStr($str);
 		$retorno = array();
 		$aTag = "";
 		for($i = 0; $i < strlen($str);$i++){

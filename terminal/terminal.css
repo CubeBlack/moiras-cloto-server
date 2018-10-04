@@ -1,0 +1,42 @@
+header{
+	position:fixed;
+	right:0;
+	transparent:0.5;
+	background-color:rgb(255,255,255);
+	
+	display:none;
+}
+#content,#query{
+	width: calc(100% - 12px);
+}
+#query{
+  bottom: 0;
+
+  padding: 3px;;
+}
+#content{
+  position: absolute;
+  height: calc(100% - 73px);
+  overflow: scroll;
+  white-space:pre-wrap;
+}
+#comandInp{
+	width: calc(100% - 23px);
+	height:25px;
+	padding-left:10px;
+	padding-right:10px;
+	padding-top:1px;
+	padding-bottom:1px;
+	border:1px solid black;
+	border-radius:3px;
+	margin:0;
+}
+#log{
+	color:red;
+}
+#sended{
+	color:purple;
+}
+#receved{
+	color:blue;
+}

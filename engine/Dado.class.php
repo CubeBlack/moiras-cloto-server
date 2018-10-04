@@ -61,11 +61,13 @@ class Dado{
 	}
 	function search($criterio="",$tRetorno=""){
 		global $db, $user;
-		$sql = "SELECT * FROM `cloto_dados` where `user` = {$user->id};";
+		$sql = "SELECT * FROM `cloto_dados` where `user` = {$user->id} ";
 		if($criterio != ""){
 			$qTags = Tag::stringToTags($criterio);
-			$sql .=" WHERE tag like ";
+            //var_dump($qTags);
+			$sql .="and ";
 			for($i = 0; $i < sizeof($qTags); $i++){
+                $sql .="tag like ";
 				$sql .="'%{$qTags[$i]}%'";
 				if(sizeof($qTags)-1 != $i){
 					$sql .=" and ";
