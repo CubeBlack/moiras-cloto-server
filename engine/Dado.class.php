@@ -9,7 +9,7 @@ class Dado{
 			return false;
 		}
 		//$dado=urlencode($dado);
-		echo $sql = "INSERT INTO `cloto_dados` (`user`, `dado`, `tag`) VALUES ('{$user->id}','{$dado}', '{$tag}');";
+		$sql = "INSERT INTO `cloto_dados` (`user`, `dado`, `tag`) VALUES ('{$user->id}','{$dado}', '{$tag}');";
 		$db->query($sql);
 		return "Ok";
 	}
@@ -105,6 +105,21 @@ class Dado{
 		$dado["tag"] = Tag::stringToTags(urldecode($row["tag"]));
 	return $dado;
 	}
+    function dump(){
+        header("Content-Type: text/plain");
+        header('Content-Disposition: attachment; filename=moiras-cloto-server[dump].txt');
+header('Pragma: no-cache');
+        global $user, $db;
+        $sql = "SELECT * FROM `cloto_dados` where `user` = {$user->id} ";
+        $dados = $db->query($sql);
+        $retorno = "";
+        foreach($dados as $dado){
+            $dado["dado"] = urldecode($dado["dado"]);
+            $retorno .= "dado.novo(strBegin\"{$dado["dado"]}\"strEnd,strBegin\"{$dado["tag"]}\"strEnd);\n";
+            
+        }
+        return $retorno;
+    }
 	public function help(){
 		return <<<'EOT'
 _______________

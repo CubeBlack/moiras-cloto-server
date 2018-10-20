@@ -21,6 +21,7 @@ class Tag{
 		return $retorno;
 	}
 	public static function strToStr($str){
+        //deve retirar acentos e passar tudo pra menusculo
 		$nStr = "";
 		for($i = 0; $i < strlen($str);$i++){
 			if($str[$i]==" "||$str[$i]=="#"||$str[$i]=="'"||$str[$i]=="!"){
